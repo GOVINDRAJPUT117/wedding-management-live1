@@ -1,0 +1,49 @@
+.admin-navbar {
+  background-color: #f4eef1;
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.15);
+  padding: 10px 20px;
+  z-index: 1000;
+}
+
+.admin-brand {
+  font-family: 'Georgia', serif;
+  font-size: 26px;
+  font-weight: bold;
+  color: #ff5e7a !important;
+  letter-spacing: 1px;
+  transition: transform 0.3s ease;
+}
+
+.admin-brand:hover {
+  transform: scale(1.05);
+}
+
+.admin-nav-link {
+  color: #0d0c0c !important;
+  font-weight: 500;
+  font-size: 16px;
+  margin-left: 20px;
+  position: relative;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.admin-nav-link:hover {
+  color: #ff5e7a !important;
+}
+
+.admin-nav-link::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #ff5e7a;
+  transition: width 0.3s ease-in-out;
+}
+
+.admin-nav-link:hover::after {
+  width: 100%;
+}
