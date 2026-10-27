@@ -37,7 +37,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Session 
 app.use(session({
-  secret: process.env.TOKEN_SECRET,
+ secret: process.env.TOKEN_SECRET || process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.DB }),
