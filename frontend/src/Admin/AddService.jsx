@@ -14,9 +14,6 @@ function AddService() {
 
   const location = useLocation();
   const serviceData = location.state;
-  console.log("service data =", serviceData);
-
-  // Edit Mode -> Pre-fill values
   useEffect(() => {
     if (serviceData) {
       setService({
@@ -42,7 +39,7 @@ function AddService() {
 
     const user = JSON.parse(localStorage.getItem("userData"));
     const token = user?.token;
-    console.log("token==", token);
+    
 
     const formData = new FormData();
     formData.append("service_name", service.service_name);

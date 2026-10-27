@@ -218,23 +218,35 @@ export const fetchcategory = async (req, res, next) => {
 };
 
 
-  export const Nofetchcategory = async(req,res,next)=>
- {
-  const cat  = decodeURIComponent(req.params.name).trim().toLowerCase();
-  console.log("cat="+cat)
-  const service = await serviceSchemaModel.find().populate("Category")
-   console.log("service"+service)
-  const filterservice = service.filter(service=>service.category.catName===cat)
 
-  console.log("filterserice"+filterservice)
+export const Nofetchcategory = async (req, res, next) => {
+  try {
+    const cat = decodeURIComponent(req.params.name).trim().toLowerCase();
+    console.log("cat = " + cat);
 
-  if(filterservice.length===0)
-  {
-    res.status(404)
-        .json(new APIResponse(false, null, "cat not found"));
+    // ✅ Corrected populate
+    const service = await serviceSchemaModel.find().populate("category");
+    console.log("service", service);
+
+    const filterservice = service.filter(
+      (item) => item.category.catName.toLowerCase() === cat
+    );
+
+    console.log("filteredService", filterservice);
+
+    if (filterservice.length === 0) {
+      return res
+        .status(404)
+        .json(new APIResponse(false, null, "Category not found"));
+    }
+
+    res
+      .status(200)
+      .json(new APIResponse(true, filterservice, "Service fetched successfully"));
+  } catch (error) {
+    console.error("Error in Nofetchcategory:", error);
+    res
+      .status(500)
+      .json(new APIResponse(false, null, "Internal Server Error"));
   }
-  else{
-  res.status(200)
-      .json(new APIResponse(true, filterservice, "Service updated successfully"));
-  }
- }
+};

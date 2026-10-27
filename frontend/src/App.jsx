@@ -23,17 +23,35 @@ import AdminServices from './Admin/AdminServices';
 import CategoryServiceList from './category/CategoryServiceList';
 
 function App() {
-  const [userData, setUserData] = useState({
+  // const [userData, setUserData] = useState({
+  //   isLoginStatus: false,
+  //   role: undefined,
+  // });
+
+  // useEffect(() => {
+  //   const stored = localStorage.getItem('userData');
+  //   if (stored) {
+  //     setUserData(JSON.parse(stored));
+  //   }
+  // }, []);
+
+
+  const [userData, setUserData] = useState(() => {
+  try {
+    const stored = localStorage.getItem("userData");
+
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error("Unable to read user data:", error);
+  }
+
+  return {
     isLoginStatus: false,
     role: undefined,
-  });
-
-  useEffect(() => {
-    const stored = localStorage.getItem('userData');
-    if (stored) {
-      setUserData(JSON.parse(stored));
-    }
-  }, []);
+  };
+});
 
   const isAdmin = userData.isLoginStatus && userData.role === 'admin';
 

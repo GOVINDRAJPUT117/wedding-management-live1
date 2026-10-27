@@ -48,16 +48,16 @@ const Home = () => {
         <h2>Top Categories</h2>
         <div className="card-grid">
           <div className="card" onClick={() => handleCategoryClick("photography")}>
-            <img src="/assets/rajput/09710ec3acdb317c3825da8633329d06.jpg" alt="Photography"  style={{ width: "300px", height: "300px", objectFit: "cover" }} />
+            <img src="public/display_img/5a9c8d78489a0a5ba184847f6de51cd6.jpg" alt="Photography"  style={{ width: "300px", height: "300px", objectFit: "cover" }} />
             <h3>Photography</h3>
           </div>
           <div className="card" onClick={() => handleCategoryClick("decoration")}>
-            <img src="/assets/rajput/d9349087c85b43d8df8074e7b92ac6b3.jpg" alt="Decoration"  style={{ width: "300px", height: "300px", objectFit: "cover" }} />
+            <img src="public/display_img/6eb111f97a89f079b852ae40b3ea2bc7.jpg" alt="Decoration"  style={{ width: "300px", height: "300px", objectFit: "cover" }} />
             <h3>Decoration</h3>
           </div>
           <div className="card" onClick={() => handleCategoryClick("makeup")}>
             <img
-               src="/assets/rajput/22fa314972dcc23e722c60fa726af489.jpg"
+               src="public/display_img/9fb67ba9064be86ebba53c3e73bfe35e.jpg"
                   alt="Makeup"
                    style={{ width: "300px", height: "300px", objectFit: "cover" }}
 />
@@ -68,7 +68,7 @@ const Home = () => {
       </section>
 
       {/* Category Services */}
-      {selectedCategory && categoryServices.length > 0 && (
+      {/* {selectedCategory && categoryServices.length > 0 && (
         <section className="section">
           <h2>Services for {selectedCategory}</h2>
           <div className="card-grid">
@@ -88,7 +88,7 @@ const Home = () => {
             ))}
           </div>
         </section>
-      )}
+      )} */}
 
   
 

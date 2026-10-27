@@ -35,7 +35,7 @@ const Navbar = () => {
         </div>
 
         {/* Search Box */}
-        <div className="search-container ms-5">
+        {/* <div className="search-container ms-5">
           <input
             type="text"
             className="form-control"
@@ -44,7 +44,7 @@ const Navbar = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
           />
-        </div>
+        </div> */}
 
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span className="navbar-toggler-icon"></span>
@@ -78,9 +78,9 @@ const Navbar = () => {
               </Link>
               <ul className="dropdown-menu" aria-labelledby="navbarCategory">
                 <li><Link className="dropdown-item" to="/category/photography">Photography</Link></li>
-                <li><Link className="dropdown-item" to="/category/makeup">Makeup</Link></li>
-                <li><Link className="dropdown-item" to="/category/drinks">Drinks</Link></li>
-                <li><Link className="dropdown-item" to="/category/food-catering">Colorful Mocktail</Link></li>
+                <li><Link className="dropdown-item" to="/category/food & catering">food & catering</Link></li>
+                <li><Link className="dropdown-item" to="/category/decoration">decoration</Link></li>
+                <li><Link className="dropdown-item" to="/category/bridal & groom makeup">bridal & groom</Link></li>
               </ul>
             </li>
 

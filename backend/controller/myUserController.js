@@ -112,7 +112,7 @@ import generateOTP from "../otpgenrate/otp.js"
       gender,
       otp,
       otpExpiresAt,
-      role:"user"
+      role:"admin"
     });
 
     console.log("data"+fakeDB)

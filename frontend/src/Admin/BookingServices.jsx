@@ -21,7 +21,7 @@ function BookingServices() {
       console.error("Booking fetch error", err);
     });
 }, []);
-  // ✅ Confirm Button Handler
+  // Confirm Button Handler
   const handleConfirm = async (id) => {
     3
     console.log("id is here"+id)
@@ -37,7 +37,7 @@ function BookingServices() {
       );
 
       if (res.data.status) {
-        alert("✅ Service confirmed successfully");
+        alert(" Service confirmed successfully");
 
         // Optional: update service list
        setServices((prevServices) =>
@@ -47,11 +47,11 @@ function BookingServices() {
        setCartCount(res.data.totalServices || cartCount - 1); 
       
       } else {
-        alert("❌ Failed to confirm service");
+        alert(" Failed to confirm service");
       }
     } catch (err) {
       console.error("Error confirming service:", err);
-      alert("❌ Error confirming service");
+      alert(" Error confirming service");
     }
   };
 
@@ -85,12 +85,12 @@ function BookingServices() {
           Price: ₹{service.serviceId?.service_price}
         </p>
 
-        {/* ✅ Confirm Button */}
+        {/*  Confirm Button */}
         <button
           className="btn btn-success w-100 mt-2"
           onClick={() => handleConfirm(service._id)}
         >
-          ✅ Confirm
+           Confirm
         </button>
       </div>
     </div>
