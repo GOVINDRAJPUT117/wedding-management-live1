@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import WebService from "../services/WebServices";
 import WebAPI from "../services/WebAPI";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../pages/auth.css";
+import "../pages/Auth.css";
 
 function AddService() {
   const [service, setService] = useState({
