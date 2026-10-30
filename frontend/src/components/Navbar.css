@@ -1,4 +1,4 @@
-
+/* 
 .shaadi-navbar {
   background-color: #f4eef1;
   box-shadow: 0 4px 8px rgba(255, 105, 180, 0.15);
@@ -54,4 +54,138 @@
 
 .nav-link-custom:hover::after {
   width: 100%;
+} */
+
+.shaadi-navbar {
+  background-color: #f4eef1;
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.15);
+  padding: 10px 20px;
+  min-height: 64px;
+  box-sizing: border-box;
+  z-index: 1000;
+  width: 100%;
+}
+
+/* ShaadiVibes Logo */
+.brand-logo {
+  font-family: 'Georgia', serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: #ff5e7a !important;
+  letter-spacing: 1px;
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
+}
+
+.heart-icon {
+  color: #b60b27;
+  font-size: 20px;
+}
+
+/* Navbar Links */
+.nav-link-custom {
+  color: #0d0c0c !important;
+  font-weight: 500;
+  font-size: 16px;
+  margin-left: 20px;
+  position: relative;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  line-height: 1.5;
+  padding: 8px 0.5rem;
+}
+
+.nav-link-custom:hover {
+  color: #ff5e7a !important;
+}
+
+/* Pink hover underline */
+.nav-link-custom::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #ff5e7a;
+  transition: width 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+.nav-link-custom:hover::after {
+  width: 100%;
+}
+
+/* Dropdown buttons */
+.navbar-dropdown-btn {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: none;
+  outline-offset: 2px;
+}
+
+.navbar-dropdown-btn:focus {
+  box-shadow: none;
+}
+
+/* FIX: Dropdown arrow/point hide */
+.shaadi-navbar .dropdown-toggle::after {
+  display: none !important;
+}
+
+/* Dropdown menu */
+.shaadi-navbar .dropdown-menu {
+  z-index: 1050;
+}
+
+/* Dropdown items */
+.shaadi-navbar .dropdown-menu .dropdown-item {
+  font-size: 15px;
+  padding: 9px 16px;
+}
+
+.shaadi-navbar .dropdown-menu .dropdown-item:hover {
+  background-color: #f8e4eb;
+  color: #b60b27;
+}
+
+/* Dropdown Logout button styling */
+.shaadi-navbar .dropdown-menu button.dropdown-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Mobile responsive navbar */
+@media (max-width: 991.98px) {
+  .shaadi-navbar {
+    padding: 10px 15px;
+  }
+
+  .nav-link-custom {
+    margin-left: 0;
+  }
+
+  .nav-link-custom::after {
+    bottom: 2px;
+  }
+
+  .navbar-nav {
+    padding-top: 8px;
+  }
 }

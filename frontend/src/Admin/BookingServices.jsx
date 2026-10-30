@@ -1,33 +1,45 @@
+
 import React, { useEffect, useState } from "react";
 import WebServices from "../services/WebServices";
 import WebAPI from "../services/WebAPI";
 import { useCart } from "../pages/CartContext";
+import Card from "../card/Card";
 
 function BookingServices() {
   const [services, setServices] = useState([]);
-   const { cartCount, setCartCount, totalPrice, setTotalPrice } = useCart();
-   
- useEffect(() => {
-  var user = JSON.parse(localStorage.getItem("userData"));
-  var token = user?.token;
+  const [loading, setLoading] = useState(true);
 
-  WebServices.getAPIUsingToken(WebAPI.fetchPendingBookings, token)
-    .then((res) => {
-      setServices(res.data.data[0].items);
-      console.log("Bookings fetched:", res.data.data[0].items);
-      console.log("abb pura data",res.data.data)
-    })
-    .catch((err) => {
-      console.error("Booking fetch error", err);
-    });
-}, []);
-  // Confirm Button Handler
+  const { cartCount, setCartCount } = useCart();
+
+  useEffect(() => {
+    const fetchPendingBookings = async () => {
+      const user = JSON.parse(
+        localStorage.getItem("userData") || "null"
+      );
+      const token = user?.token;
+
+      try {
+        const res = await WebServices.getAPIUsingToken(
+          WebAPI.fetchPendingBookings,
+          token
+        );
+
+        setServices(res.data.data || []);
+      } catch (err) {
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendingBookings();
+  }, []);
+
   const handleConfirm = async (id) => {
-    3
-    console.log("id is here"+id)
-     var user = JSON.parse(localStorage.getItem("userData"));
-    var token = user?.token;
-    console.log("Token from localStorage:", token);
+    const user = JSON.parse(
+      localStorage.getItem("userData") || "null"
+    );
+    const token = user?.token;
 
     try {
       const res = await WebServices.postAPIUsingToken(
@@ -37,72 +49,92 @@ function BookingServices() {
       );
 
       if (res.data.status) {
-        alert(" Service confirmed successfully");
+        alert("Service confirmed successfully");
 
-        // Optional: update service list
-       setServices((prevServices) =>
-        prevServices.filter(service => service._id.toString() !== id.toString())
-      );
+        setServices((previousServices) =>
+          previousServices
+            .map((cart) => ({
+              ...cart,
+              items: cart.items.filter(
+                (item) => item._id.toString() !== id.toString()
+              ),
+            }))
+            .filter((cart) => cart.items.length > 0)
+        );
 
-       setCartCount(res.data.totalServices || cartCount - 1); 
-      
+        setCartCount(
+          res.data.totalServices ?? Math.max(0, cartCount - 1)
+        );
       } else {
-        alert(" Failed to confirm service");
+        alert("Failed to confirm service");
       }
     } catch (err) {
-      console.error("Error confirming service:", err);
-      alert(" Error confirming service");
+      alert("Error confirming service");
     }
   };
 
   return (
     <div className="container my-4">
-      <h2 className="text-center mb-4">Services</h2>
-      <div className="row">
-      {services.map((service) => (
-  <div className="col-md-4 mb-4" key={service._id}>
-    <div className="card h-100 shadow">
-      <img
-       
-        src={`http://localhost:3000/uploads/${encodeURIComponent(service.serviceId?.service_image)}`}
-        className="card-img-top"
-        alt={service.serviceId?.service_name}
-        style={{ height: "400px", objectFit: "cover" }}
-      />
-      <div className="card-body">
-        <h5 className="card-title text-capitalize">
-          Service Name: {service.serviceId?.service_name}
-        </h5>
-        <p className="card-text">
-          <strong>Category:</strong>{" "}
-         {Array.isArray(service.serviceId?.category)
-  ? service.serviceId.category.map((cat) => cat.catName).join(", ")
-  : service.serviceId?.category?.catName || "N/A"}
-        </p>
-        <p className="card-text">{service.serviceId?.service_description}</p>
-        <p className="card-text fw-bold">name :{service.name}</p>
-        <p className="card-text fw-bold">
-          Price: ₹{service.serviceId?.service_price}
-        </p>
+      <h2
+  className="text-center mb-4"
+  style={{
+    color: "#7d263f",
+    fontFamily: 'Georgia, "Times New Roman", serif',
+    fontSize: "38px",
+    fontWeight: "600",
+  }}
+>
+  Pending Bookings
+</h2>
 
-        {/*  Confirm Button */}
-        <button
-          className="btn btn-success w-100 mt-2"
-          onClick={() => handleConfirm(service._id)}
-        >
-           Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-))}
-      </div>
+      {loading ? (
+        <p className="text-center">Loading bookings...</p>
+      ) : services.length === 0 ? (
+        <p className="text-center">
+          No pending bookings available.
+        </p>
+      ) : (
+        <div className="row">
+          {services.map((cart) => (
+            <React.Fragment key={cart.cartId}>
+              {cart.items.map((item) => {
+                const service = item.serviceId;
+
+                if (!service) return null;
+
+                return (
+                  <div
+                    className="col-12 col-sm-6 col-lg-4 mb-4"
+                    key={item._id}
+                  >
+                    <Card
+                      service={service}
+                      showCategory={true}
+                      showDescription={true}
+                      showPrice={true}
+                      truncateDescription={false}
+                      extraInfo={
+                        <p className="card-text fw-bold">
+                          Name: {cart.user?.name}
+                        </p>
+                      }
+                    >
+                      <button
+                        className="btn btn-success w-100 mt-2"
+                        onClick={() => handleConfirm(item._id)}
+                      >
+                        Confirm
+                      </button>
+                    </Card>
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 export default BookingServices;
-
-
-
-

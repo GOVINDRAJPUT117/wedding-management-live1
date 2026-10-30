@@ -1,47 +1,81 @@
-import React from 'react';
-import { FaFacebookF, FaInstagram, FaTwitter, FaHeart } from 'react-icons/fa';
+
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaTwitter,
+  FaHeart,
+  FaArrowRight
+} from "react-icons/fa";
+import "./Footer.css";
 
 const Footer = () => {
   return (
-    <footer className="bg-danger text-white pt-5 pb-3 mt-5">
-      <div className="container">
-        <div className="row text-center text-md-start">
-          {/* Logo / About */}
-          <div className="col-md-4 mb-4">
-            <h5 className="mb-3">ShaadiVibes</h5>
-            <p>Celebrating your special moments with elegance and style. Your perfect wedding partner!</p>
+    <footer className="shaadi-footer">
+      <div className="footer-main container">
+        <div className="row g-4">
+
+          <div className="col-lg-5 col-md-6">
+            <Link to="/" className="footer-brand">
+              <FaHeart className="footer-heart" />
+              ShaadiVibes
+            </Link>
+
+            <p className="footer-about">
+              Every love story deserves a beautiful celebration.
+              Discover wedding services and bring your dream wedding
+              to life with ShaadiVibes.
+            </p>
+
+            <div className="footer-socials">
+              <a href="#" aria-label="Facebook">
+                <FaFacebookF />
+              </a>
+              <a href="#" aria-label="Instagram">
+                <FaInstagram />
+              </a>
+              <a href="#" aria-label="Twitter">
+                <FaTwitter />
+              </a>
+            </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="col-md-4 mb-4">
-            <h5 className="mb-3">Quick Links</h5>
-            <ul className="list-unstyled">
-              <li><a href="/" className="text-white text-decoration-none">Home</a></li>
-              <li><a href="/services" className="text-white text-decoration-none">Services</a></li>
-              <li><a href="/bookings" className="text-white text-decoration-none">Bookings</a></li>
-              <li><a href="/login" className="text-white text-decoration-none">Login</a></li>
-              <li><a href="/profilePage" className="text-white text-decoration-none">Profile</a></li>
+          <div className="col-lg-3 col-md-6">
+            <h5 className="footer-heading">Quick Links</h5>
+
+            <ul className="footer-links">
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/services">Our Services</Link></li>
+              <li><Link to="/login">Login</Link></li>
             </ul>
           </div>
 
-          {/* Social Media */}
-          <div className="col-md-4 mb-4">
-            <h5 className="mb-3">Follow Us</h5>
-            <div className="d-flex justify-content-center justify-content-md-start gap-3">
-              <a href="#" className="text-white fs-5"><FaFacebookF /></a>
-              <a href="#" className="text-white fs-5"><FaInstagram /></a>
-              <a href="#" className="text-white fs-5"><FaTwitter /></a>
-            </div>
+          <div className="col-lg-4 col-md-12">
+            <h5 className="footer-heading">Make Your Day Special</h5>
+
+            <p className="footer-contact-text">
+              From beautiful decorations to unforgettable photographs,
+              find the services that make your celebration memorable.
+            </p>
+
+            <Link to="/services" className="footer-explore">
+              Explore Services <FaArrowRight />
+            </Link>
           </div>
+
         </div>
+      </div>
 
-        <hr className="border-secondary" />
+      <div className="footer-bottom">
+        <div className="container footer-bottom-content">
+          <p>
+            © {new Date().getFullYear()} ShaadiVibes. All Rights Reserved.
+          </p>
 
-        {/* Bottom line */}
-        <div className="text-center">
-          <p className="mb-0">
-            &copy; {new Date().getFullYear()} ShaadiVibes. All Rights Reserved. <br />
-            Designed with <FaHeart className="text-danger" /> by Govind Rajput
+          <p>
+            Made with <FaHeart className="footer-bottom-heart" /> for
+            beautiful celebrations.
           </p>
         </div>
       </div>
@@ -50,4 +84,3 @@ const Footer = () => {
 };
 
 export default Footer;
-

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import WebService from "../services/WebServices";
-import WebAPI from '../services/WebAPI';
-import { useNavigate } from "react-router-dom";
-
+import WebAPI from "../services/WebAPI";
+import { useNavigate,Link } from "react-router-dom";
+import "./Auth.css";
 
 function Register() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ function Register() {
     email: "",
     password: "",
     mobile: "",
-    gender: ""
+    gender: "",
   });
 
   const [otp, setOtp] = useState("");
@@ -27,37 +27,48 @@ function Register() {
 
   const submitForm = async (e) => {
     e.preventDefault();
+    setMessage("");
+
     try {
       const res = await WebService.postAPICall(WebAPI.registerAPI, store);
-      console.log("response",res.data.message)
+
       setMessage(res.data.message || "OTP sent successfully");
       setShowOtp(true);
-      setTimeLeft(300); // 5 minutes countdown
+      setTimeLeft(300);
     } catch (err) {
-      setMessage(err.response?.data?.message || err.message);
+      setMessage(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
     }
   };
 
   const verifyOtp = async () => {
+    setMessage("");
+
     try {
-     const res = await WebService.postAPICall(WebAPI.verify, {
-                 email: store.email,
-                  otp
-                     });
-       console.log("response==",res.data.message)
+      const res = await WebService.postAPICall(WebAPI.verify, {
+        email: store.email,
+        otp,
+      });
 
       setMessage(res.data.message || "Verified successfully");
       setShowOtp(false);
       setTimeLeft(0);
-      navigate("/login"); // navigate after OTP verification
+      navigate("/login");
     } catch (err) {
-      setMessage(err.response?.data?.message || err.message);
+      setMessage(
+        err.response?.data?.message || "OTP verification failed. Please try again."
+      );
     }
   };
 
   useEffect(() => {
     if (timeLeft <= 0) return;
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
     return () => clearInterval(timer);
   }, [timeLeft]);
 
@@ -68,55 +79,75 @@ function Register() {
   };
 
   return (
-    <div className="container mb-4">
-      <center>
-        <div style={{ width: '400px' }} className="form-control mt-2">
-          <h1 style={{ color: 'red', textAlign: 'center' }}>Create Account</h1>
+    <div className="auth-page">
+      <div className="auth-card register-card">
+        <div className="auth-icon">♥</div>
 
-          {/* Form and OTP in same place */}
-          {!showOtp ? (
-            <form onSubmit={submitForm} className="mt-4">
+        <h1 className="auth-title">
+          {showOtp ? "Verify Your Email" : "Create Account"}
+        </h1>
+
+        <p className="auth-subtitle">
+          {showOtp
+            ? "Enter the OTP sent to your email address."
+            : "Join ShaadiVibes and plan your special celebration."}
+        </p>
+
+        {!showOtp ? (
+          <form onSubmit={submitForm} autoComplete="off">
+            <div className="auth-field">
+              <label>Full Name</label>
               <input
                 type="text"
-                className="form-control mt-4"
-                placeholder="Enter Name"
+                placeholder="Enter your name"
                 name="name"
                 value={store.name}
                 onChange={handleChange}
                 required
               />
+            </div>
+
+            <div className="auth-field">
+              <label>Email Address</label>
               <input
                 type="email"
-                className="form-control mt-4"
-                placeholder="Enter Email"
+                placeholder="Enter your email"
                 name="email"
                 value={store.email}
                 onChange={handleChange}
                 required
-                autoComplete="off"
               />
+            </div>
+
+            <div className="auth-field">
+              <label>Password</label>
               <input
                 type="password"
-                className="form-control mt-4"
-                placeholder="Enter Password"
+                placeholder="Create password"
                 name="password"
                 value={store.password}
                 onChange={handleChange}
                 required
                 autoComplete="new-password"
               />
+            </div>
+
+            <div className="auth-field">
+              <label>Mobile Number</label>
               <input
                 type="tel"
-                className="form-control mt-4"
-                placeholder="Enter Mobile Number"
+                placeholder="Enter 10-digit mobile number"
                 name="mobile"
                 value={store.mobile}
                 onChange={handleChange}
                 required
                 pattern="[0-9]{10}"
               />
+            </div>
+
+            <div className="auth-field">
+              <label>Gender</label>
               <select
-                className="form-control mt-4"
                 name="gender"
                 value={store.gender}
                 onChange={handleChange}
@@ -126,35 +157,50 @@ function Register() {
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
+            </div>
 
-              <input type="submit" value="Submit" className="btn btn-danger mt-4" />
-            </form>
-          ) : (
-            <div className="mt-4">
-              <h5>Enter OTP sent to your email</h5>
+            <button type="submit" className="auth-button">
+              Create Account
+            </button>
+          </form>
+        ) : (
+          <div className="otp-section">
+            <div className="auth-field">
+              <label>Enter OTP</label>
               <input
                 type="text"
-                className="form-control mt-2"
                 placeholder="Enter OTP"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
               />
-              <button
-                onClick={verifyOtp}
-                className="btn btn-success mt-2"
-                disabled={timeLeft <= 0}
-              >
-                Verify OTP
-              </button>
-              <p className="mt-1">OTP expires in: {formatTime(timeLeft)}</p>
             </div>
-          )}
 
-          {message && <p style={{ color: 'red', marginTop: '10px' }}>{message}</p>}
-        </div>
-      </center>
+            <button
+              onClick={verifyOtp}
+              className="auth-button"
+              disabled={timeLeft <= 0}
+            >
+              Verify OTP
+            </button>
+
+            <p className="otp-timer">
+              OTP expires in: <strong>{formatTime(timeLeft)}</strong>
+            </p>
+          </div>
+        )}
+
+        {message && <p className="auth-message">{message}</p>}
+
+        {!showOtp && (
+          <p className="auth-footer-text">
+            Already have an account?
+            <Link to="/login"> Login</Link>
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
 export default Register;
+

@@ -1,94 +1,205 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import WebServices from "../services/WebServices";
 import WebAPI from "../services/WebAPI";
-import { useCart } from "./CartContext"; 
+import { useCart } from "./CartContext";
+import Card from "../card/Card";
 
 function AddToCart() {
   const [bookingList, setBookingList] = useState([]);
-  const { cartCount, setCartCount, totalPrice, setTotalPrice } = useCart(); 
-  
-  const fetchBookings = () => {
-    const user = JSON.parse(localStorage.getItem("userData"));
-    const token = user?.token;
-    const userId = user?._id;
+  const [loading, setLoading] = useState(true);
 
-    if (!userId || !token) return;
+  const {
+    cartCount,
+    setCartCount,
+    setTotalPrice,
+    refreshCart,
+  } = useCart();
 
-    WebServices.getAPIUsingToken(`${WebAPI.fetchCart}/${userId}`, token)
-      .then((res) => {
-        const data = res.data.data.items;
-        setBookingList(data);
-        setCartCount(data.length); 
-        const price = data.reduce((acc, item) => acc + (item.serviceId?.service_price || 0), 0);
-        setTotalPrice(price);
-      })
-      .catch((err) => {
-        console.error("Booking fetch error", err);
-      });
+  const getTotalPrice = (items) => {
+    return items.reduce((total, item) => {
+      return (
+        total +
+        Number(item.serviceId?.service_price ?? item.price ?? 0)
+      );
+    }, 0);
   };
 
-  useEffect(() => {
-    fetchBookings(); 
-  }, []);
-
-  const removeService = async (id) => {
-    const user = JSON.parse(localStorage.getItem("userData"));
-    const token = user?.token;
+  const fetchCart = useCallback(async () => {
+    let userData;
 
     try {
-      const response = await WebServices.deleteAPIUsingToken(`${WebAPI.RemoveCartItems}/${id}`, token);
+      userData = JSON.parse(
+        localStorage.getItem("userData") || "null"
+      );
+    } catch {
+      userData = null;
+    }
 
-      if (response.data.status) {
-        const updatedList = bookingList.filter((item) => item._id !== id);
+    const token = userData?.token;
+    const userId = userData?._id;
+
+    if (!userId || !token || !userData?.isLoginStatus) {
+      setBookingList([]);
+      setCartCount(0);
+      setTotalPrice(0);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await WebServices.getAPIUsingToken(
+        `${WebAPI.fetchCart}/${userId}`,
+        token
+      );
+
+      const items = res.data?.data?.items || [];
+
+      setBookingList(items);
+      setCartCount(items.length);
+      setTotalPrice(getTotalPrice(items));
+    } catch (error) {
+      setBookingList([]);
+      setCartCount(0);
+      setTotalPrice(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [setCartCount, setTotalPrice]);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
+  useEffect(() => {
+    const handleUserChange = () => {
+      fetchCart();
+    };
+
+    window.addEventListener("userLogin", handleUserChange);
+    window.addEventListener("userLogout", handleUserChange);
+
+    return () => {
+      window.removeEventListener("userLogin", handleUserChange);
+      window.removeEventListener("userLogout", handleUserChange);
+    };
+  }, [fetchCart]);
+
+  const removeService = async (id) => {
+    let userData;
+
+    try {
+      userData = JSON.parse(
+        localStorage.getItem("userData") || "null"
+      );
+    } catch {
+      userData = null;
+    }
+
+    const token = userData?.token;
+
+    if (!token) {
+      alert("Please login first.");
+      return;
+    }
+
+    try {
+      const res = await WebServices.deleteAPIUsingToken(
+        `${WebAPI.RemoveCartItems}/${id}`,
+        token
+      );
+
+      if (res.status === 200) {
+        const updatedList = bookingList.filter(
+          (item) => item._id !== id
+        );
+
         setBookingList(updatedList);
-        setCartCount(updatedList.length); 
-        const price = updatedList.reduce((acc, item) => acc + (item.serviceId?.service_price || 0), 0);
-        setTotalPrice(price);
-      } else {
-        alert("Service not removed. Try again!");
+        setCartCount(updatedList.length);
+        setTotalPrice(getTotalPrice(updatedList));
+
+        window.dispatchEvent(new Event("cartUpdated"));
+
+        alert("Item removed from cart");
       }
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Error while deleting service");
+    } catch (error) {
+      alert("Unable to remove item from cart.");
     }
   };
 
   return (
     <div className="container my-4">
-      <h2 className="text-center mb-4">🧾 My Booking Cart</h2>
-      {bookingList.length === 0 ? (
-        <h5 className="text-center text-muted">No services booked yet!</h5>
+      <h2
+        className="text-center mb-4"
+        style={{
+          color: "#7d263f",
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontSize: "38px",
+          fontWeight: "600",
+          letterSpacing: "0.5px",
+        }}
+      >
+        My Cart
+      </h2>
+
+      {loading ? (
+        <p className="text-center">Loading cart...</p>
+      ) : bookingList.length === 0 ? (
+        <p className="text-center">Your cart is empty.</p>
       ) : (
         <>
-          <div className="row">
-            {bookingList.map((booking) => (
-              <div className="col-md-4 mb-4" key={booking._id}>
-                <div className="card h-100 shadow">
-                  <img
-                     src={`http://localhost:3000/uploads/${encodeURIComponent(booking.serviceId?.service_image)}`}
-                     className="card-img-top"
-                     alt={booking.serviceId?.service_name}
-                     style={{ height: "400px", objectFit: "cover" }}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{booking.serviceId?.service_name}</h5>
-                    <p className="card-text">{booking.serviceId?.service_description}</p>
-                    <p className="fw-bold">₹ {booking.serviceId?.service_price}</p>
+          <div className="row g-4">
+            {bookingList.map((item) => {
+              const service = item.serviceId;
+
+              if (!service) return null;
+
+              return (
+                <div
+                  className="col-12 col-sm-6 col-lg-4"
+                  key={item._id}
+                >
+                  <Card
+                    service={service}
+                    showCategory={false}
+                    showDescription={true}
+                    showPrice={true}
+                    truncateDescription={false}
+                  >
                     <button
-                      className="btn btn-danger w-100"
-                      onClick={() => removeService(booking._id)}
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => removeService(item._id)}
                     >
                       Remove
                     </button>
-                  </div>
+                  </Card>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Total Payment */}
-          <div className="mt-4 text-end">
-            <h4>Total Payment: ₹{totalPrice}</h4>
+          <div
+            className="text-end mt-4 p-3"
+            style={{
+              borderTop: "1px solid #eadde0",
+              color: "#302329",
+            }}
+          >
+            <h5>Cart Items: {cartCount}</h5>
+
+            <h4
+              style={{
+                color: "#7d263f",
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontWeight: "600",
+                marginTop: "12px",
+              }}
+            >
+              Total Payment: ₹
+              {getTotalPrice(bookingList).toLocaleString("en-IN")}
+            </h4>
           </div>
         </>
       )}

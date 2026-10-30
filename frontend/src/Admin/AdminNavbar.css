@@ -46,4 +46,29 @@
 
 .admin-nav-link:hover::after {
   width: 100%;
+} 
+
+
+
+
+/* Active menu */
+.admin-nav-link.active {
+  color: #b60b27 !important;
+  font-weight: 600;
+}
+
+.admin-nav-link.active::after {
+  width: 100%;
+}
+
+/* Logout button */
+.admin-nav-link.admin-logout {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.admin-nav-link.admin-logout:focus {
+  box-shadow: none;
 }
