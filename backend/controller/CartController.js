@@ -200,10 +200,17 @@ export const confirmBooking = async (req, res) => {
 
 //removeCartItem
 
+
 export const removeCartItem = async (req, res) => {
   try {
     const { itemId } = req.params;
     const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json(
+        new APIResponse(false, null, "User not authenticated")
+      );
+    }
 
     if (!itemId) {
       return res.status(400).json(
@@ -219,32 +226,49 @@ export const removeCartItem = async (req, res) => {
       );
     }
 
+    const itemExists = cart.items.some(
+      item => item._id.toString() === itemId
+    );
+
+    if (!itemExists) {
+      return res.status(404).json(
+        new APIResponse(false, null, "Item not found")
+      );
+    }
+
     cart.items = cart.items.filter(
       item => item._id.toString() !== itemId
     );
 
     await cart.save();
 
-    await cart.populate("items.serviceId");
-
     const totalPrice = cart.items.reduce(
-      (acc, item) => acc + (item.serviceId.price || 0),
+      (total, item) => total + Number(item.price || 0),
       0
     );
-
-    const totalServices = cart.items.length;
 
     return res.status(200).json(
       new APIResponse(
         true,
-        { cart, totalPrice, totalServices },
+        {
+          cart,
+          totalPrice,
+          totalServices: cart.items.length
+        },
         "Item removed successfully"
       )
     );
 
   } catch (err) {
+    console.error("REMOVE CART ERROR:", err);
+
     return res.status(500).json(
-      new APIResponse(false, null, "Failed to remove item")
+      new APIResponse(
+        false,
+        null,
+        "Failed to remove item",
+        err.message
+      )
     );
   }
 };
