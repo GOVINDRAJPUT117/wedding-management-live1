@@ -333,7 +333,7 @@ const Home = () => {
 
                   <div className="service-image-wrap">
                     <img
-                      src={`http://localhost:3000/uploads/${service.service_image}`}
+                      src={`https://wedding-management-backend-9wms.onrender.com/uploads/${service.service_image}`}
                       alt={service.service_name || "Wedding service"}
                       loading="lazy"
                       onError={(event) => {

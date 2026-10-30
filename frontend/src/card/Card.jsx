@@ -23,7 +23,7 @@ function Card({
     : service.category?.catName || "N/A";
 
   const imageUrl = service.service_image
-    ? `http://localhost:3000/uploads/${encodeURIComponent(
+    ? `https://wedding-management-backend-9wms.onrender.com/uploads/${encodeURIComponent(
         service.service_image
       )}`
     : "";

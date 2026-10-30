@@ -115,7 +115,7 @@ function Dashboard() {
 
                 <td>
                   <img
-                    src={`http://localhost:3000/uploads/${encodeURIComponent(
+                    src={`https://wedding-management-backend-9wms.onrender.com/uploads/${encodeURIComponent(
                       service.service_image
                     )}`}
                     alt={service.service_name}
