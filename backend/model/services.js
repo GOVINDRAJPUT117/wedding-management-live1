@@ -11,8 +11,8 @@ const serviceSchema = new mongoose.Schema(
     },
 
     category: {
-      type: mongoose.Schema.Types.ObjectId, // ✅ ObjectId reference
-      ref: "category",                      // ✅ model name (case-sensitive)
+      type: mongoose.Schema.Types.ObjectId, //  ObjectId reference
+      ref: "category",                      //  model name (case-sensitive)
       required: [true, "Category is required"],
     },
 
