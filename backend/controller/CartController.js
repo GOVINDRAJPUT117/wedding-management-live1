@@ -67,8 +67,12 @@ export const fetchCart = async (req, res) => {
       .populate({ path: "userId", select: "name" });
 
     if (!cart || cart.items.length === 0) {
-      return res.status(404).json(
-        new APIResponse(false, null, "Cart is empty")
+      return res.status(200).json(
+        new APIResponse(
+          true,
+          { items: [] },
+          "Cart is empty"
+        )
       );
     }
 
@@ -82,7 +86,6 @@ export const fetchCart = async (req, res) => {
     );
   }
 };
-
 
 //fetchPendingBookings
 export const fetchPendingBookings = async (req, res) => {
