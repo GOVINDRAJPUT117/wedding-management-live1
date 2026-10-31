@@ -55,7 +55,7 @@ class Jwt_Auth {
       if (user.role !== 'admin') {
         return res.status(403).json({
           status: false,
-          message: 'Admin access required'
+          message: 'Admin access is required '
         });
       }
 
