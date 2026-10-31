@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WebServices from "../services/WebServices";
@@ -10,7 +11,7 @@ function Services() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const { cartCount, setCartCount, setTotalPrice } = useCart();
+  const { refreshCart } = useCart();
   const navigate = useNavigate();
 
   const getUserData = () => {
@@ -79,19 +80,13 @@ function Services() {
     };
 
     try {
-      const res = await WebServices.postAPIUsingToken(
+      await WebServices.postAPIUsingToken(
         WebAPI.booknow,
         bookingData,
         token
       );
 
-      setCartCount(
-        res.data.totalServices ?? cartCount + 1
-      );
-
-      setTotalPrice(
-        res.data.totalPrice ?? Number(service.service_price)
-      );
+      await refreshCart();
 
       alert("Item Added in Cart");
     } catch (err) {
@@ -145,5 +140,3 @@ function Services() {
 }
 
 export default Services;
-
-
