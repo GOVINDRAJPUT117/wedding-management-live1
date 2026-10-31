@@ -11,7 +11,7 @@ function Card({
   showCategory = true,
   showDescription = true,
   showPrice = true,
- truncateDescription = true,
+  truncateDescription = true,
 }) {
   if (!service) return null;
 
@@ -22,11 +22,8 @@ function Card({
         .join(", ") || "N/A"
     : service.category?.catName || "N/A";
 
-  const imageUrl = service.service_image
-    ? `https://wedding-management-backend-9wms.onrender.com/uploads/${encodeURIComponent(
-        service.service_image
-      )}`
-    : "";
+  // Cloudinary image URL
+  const imageUrl = service.service_image || "";
 
   const description = service.service_description || "";
   const limit = descriptionLimit ?? 120;
@@ -59,11 +56,11 @@ function Card({
           </p>
         )}
 
-     {showDescription && (
-  <p className="card-text global-card-description">
-    {description}
-  </p>
-)}
+        {showDescription && (
+          <p className="card-text global-card-description">
+            {description}
+          </p>
+        )}
 
         {extraInfo}
 
