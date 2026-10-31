@@ -11,8 +11,8 @@ const serviceSchema = new mongoose.Schema(
     },
 
     category: {
-      type: mongoose.Schema.Types.ObjectId, //  ObjectId reference
-      ref: "category",                      //  model name (case-sensitive)
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "category",
       required: [true, "Category is required"],
     },
 
@@ -29,13 +29,19 @@ const serviceSchema = new mongoose.Schema(
       trim: true,
     },
 
+   
+    service_image_public_id: {
+      type: String,
+      default: null,
+    },
+
     service_price: {
       type: Number,
       required: [true, "Service Price is required"],
     },
 
     uid: {
-      type: mongoose.Schema.Types.ObjectId, // future: user/admin reference
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
 

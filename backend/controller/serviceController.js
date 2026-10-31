@@ -1,16 +1,42 @@
-import '../connection/dbconfig.js'
-import path from "path";
-import fs from "fs";
-import APIResponse from '../response/APIResponse.js'
-import serviceSchemaModel from '../model/services.js'
-import bookingSchemaModel from '../model/BookingModel.js'
-import catSchemaModel from '../model/category.js'   
+import '../connection/dbconfig.js';
+import APIResponse from '../response/APIResponse.js';
+import serviceSchemaModel from '../model/services.js';
+import bookingSchemaModel from '../model/BookingModel.js';
+import catSchemaModel from '../model/category.js';
+import cloudinary from "../connection/cloudinary.js";
+
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "shaadivibes/services",
+        resource_type: "image"
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+
+    stream.end(buffer);
+  });
+};
+
 
 //saveService
 
 export const saveService = async (req, res, next) => {
   try {
-    const { service_name, service_description, service_price, category } = req.body;
+    const {
+      service_name,
+      service_description,
+      service_price,
+      category,
+    } = req.body;
+
     const img_file = req.file;
 
     if (!service_name || !service_description || !service_price || !category) {
@@ -28,22 +54,31 @@ export const saveService = async (req, res, next) => {
     const categoryName = category.toLowerCase().trim();
 
     let catDoc = await catSchemaModel.findOne({
-      catName: categoryName
+      catName: categoryName,
     });
 
     if (!catDoc) {
       catDoc = await catSchemaModel.create({
-        catName: categoryName
+        catName: categoryName,
       });
     }
+
+   
+    const cloudinaryResult = await uploadToCloudinary(img_file.buffer);
 
     const service_detail = {
       service_name: service_name.toLowerCase().trim(),
       service_description: service_description.toLowerCase().trim(),
       service_price: Number(service_price),
       category: catDoc._id,
-      service_image: img_file.filename,
-      info: new Date()
+
+      
+      service_image: cloudinaryResult.secure_url,
+
+     
+      service_image_public_id: cloudinaryResult.public_id,
+
+      info: new Date(),
     };
 
     const savedService = await serviceSchemaModel.create(service_detail);
@@ -53,7 +88,7 @@ export const saveService = async (req, res, next) => {
     );
 
   } catch (err) {
-    return res.status(500).json(
+   return res.status(500).json(
       new APIResponse(false, null, "Service not saved", err.message)
     );
   }
@@ -84,7 +119,9 @@ export const deleteServices = async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    const service = await serviceSchemaModel.findOneAndDelete({ _id: id });
+    const service = await serviceSchemaModel.findOneAndDelete({
+      _id: id
+    });
 
     if (!service) {
       return res.status(404).json(
@@ -92,6 +129,18 @@ export const deleteServices = async (req, res, next) => {
       );
     }
 
+    // Delete image from Cloudinary
+    if (service.service_image_public_id) {
+      try {
+        await cloudinary.uploader.destroy(
+          service.service_image_public_id
+        );
+      } catch (imageError) {
+        console.log("Cloudinary image delete error:", imageError);
+      }
+    }
+
+    // Cancel related bookings
     await bookingSchemaModel.updateMany(
       { serviceId: id },
       {
@@ -111,7 +160,7 @@ export const deleteServices = async (req, res, next) => {
     );
 
   } catch (err) {
-    return res.status(500).json(
+  return res.status(500).json(
       new APIResponse(false, null, "Internal Server Error")
     );
   }
@@ -120,9 +169,18 @@ export const deleteServices = async (req, res, next) => {
 //updateService
 
 export const updateService = async (req, res, next) => {
+  let newImagePublicId = null;
+
   try {
     const id = req.params.id;
-    const { service_name, service_description, service_price, category } = req.body;
+
+    const {
+      service_name,
+      service_description,
+      service_price,
+      category
+    } = req.body;
+
     const img_file = req.file;
 
     if (!service_name || !service_description || !service_price || !category) {
@@ -156,42 +214,59 @@ export const updateService = async (req, res, next) => {
       service_description: service_description.toLowerCase().trim(),
       service_price: Number(service_price),
       category: catDoc._id,
-      info: new Date(),
-      service_image: existingService.service_image
+      info: new Date()
     };
 
+    
     if (img_file) {
-      const oldImagePath = path.join(
-        process.cwd(),
-        "backend",
-        "uploads",
-        existingService.service_image
+      const cloudinaryResult = await uploadToCloudinary(
+        img_file.buffer
       );
 
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
-      }
+      newImagePublicId = cloudinaryResult.public_id;
 
-      service_detail.service_image = img_file.filename;
+      service_detail.service_image = cloudinaryResult.secure_url;
+      service_detail.service_image_public_id = cloudinaryResult.public_id;
     }
 
     const updatedService = await serviceSchemaModel.findByIdAndUpdate(
       id,
       service_detail,
-      { new: true }
+      { new: true, runValidators: true }
     );
+
+   
+    if (
+      img_file &&
+      existingService.service_image_public_id
+    ) {
+      try {
+        await cloudinary.uploader.destroy(
+          existingService.service_image_public_id
+        );
+      } catch (imageError) {
+        console.log("Old Cloudinary image delete error:", imageError);
+      }
+    }
 
     return res.status(200).json(
       new APIResponse(true, updatedService, "Service updated successfully")
     );
 
   } catch (err) {
-    return res.status(500).json(
+    
+    if (newImagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(newImagePublicId);
+      } catch (imageError) {
+        console.log("New image cleanup error:", imageError);
+      }
+    }
+      return res.status(500).json(
       new APIResponse(false, null, "Service update failed", err.message)
     );
   }
 };
-
 
 //fetching service with category
 
