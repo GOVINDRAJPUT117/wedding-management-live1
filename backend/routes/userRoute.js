@@ -16,4 +16,6 @@ route.delete("/deleteUser/:_id",Jwt_Auth.tokenAuth,userController.deleteUser)
 
 route.put("/editprofile/:_id",Jwt_Auth.tokenAuth,userController.editprofile)
 
+route.post("/resendOtp", userController.resendOtp);
+
 export default route;

@@ -1,8 +1,6 @@
-
 import nodemailer from 'nodemailer';
-
-function sendDataOnMail(reciver_mail, message) {
-  var transpoter = nodemailer.createTransport({
+async function sendDataOnMail(reciver_mail, message) {
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.GMAIL_USER,
@@ -10,19 +8,20 @@ function sendDataOnMail(reciver_mail, message) {
     }
   });
 
-  var details = {
+  const details = {
     from: process.env.GMAIL_USER,
     to: reciver_mail,
-    subject: 'batch ram',
+    subject: 'ShaadiVibes - Email Verification',
     html: `
-      <h1>Welcome to Wedding Management</h1>
-      <p>This is a verification mail by my wedding management website</p>
-      <h2>Email: ${reciver_mail} <br/> OTP: ${message}</h2>
+      <h1>Welcome to ShaadiVibes</h1>
+      <p>Use the OTP below to verify your email address.</p>
+      <h2>OTP: ${message}</h2>
+      <p>This OTP is valid for 5 minutes.</p>
     `
   };
 
-  transpoter.sendMail(details, (err, result) => {
-  });
+  const result = await transporter.sendMail(details);
+  return result;
 }
 
 export default sendDataOnMail;

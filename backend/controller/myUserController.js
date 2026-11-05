@@ -1,20 +1,30 @@
 import '../connection/dbconfig.js'
 import sendDataOnMail from '../mailcontroller/mailcontroller.js';
 import userSchemaModel from '../model/userModel.js'
-import rs from 'randomstring'; 
 import jwt_auth from '../auth/auth.js'
 import APIResponse from '../response/APIResponse.js';
 import bcrypt from 'bcrypt';
 import generateOTP from "../otpgenrate/otp.js"
+import pendingUserModel from '../model/pendingUserModel.js';
 
-// saveUser
-let fakeDB = [];
+
+
 
 export const saveUser = async (req, res) => {
   try {
     const { name, email, password, mobile, gender } = req.body;
 
-    const existingUser = await userSchemaModel.findOne({ email });
+    if (!name || !email || !password || !mobile || !gender) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await userSchemaModel.findOne({
+      email: normalizedEmail
+    });
 
     if (existingUser) {
       return res.status(400).json({
@@ -22,34 +32,61 @@ export const saveUser = async (req, res) => {
       });
     }
 
-    if (fakeDB.find(u => u.email === email)) {
-      return res.status(400).json({
-        message: "OTP already sent. Please verify."
+    const existingPendingUser = await pendingUserModel.findOne({
+      email: normalizedEmail
+    });
+
+    if (existingPendingUser) {
+      return res.status(409).json({
+        message: "Registration already pending. Please verify or resend OTP."
       });
     }
 
     const hashedPassword = await bcrypt.hash(password.toString(), 10);
 
     const otp = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const otpHash = await bcrypt.hash(otp, 10);
 
-    fakeDB.push({
+    const otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+    const pendingUser = new pendingUserModel({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       mobile,
       gender,
-      otp,
+      role: "user",
+      otpHash,
       otpExpiresAt,
-      role: "user"
+      otpAttempts: 0,
+      resendCount: 0,
+      resendWindowStart: new Date(),
+      lastOtpSentAt: new Date(),
+      pendingExpiresAt: new Date(Date.now() + 15 * 60 * 1000)
     });
 
-    sendDataOnMail(email, otp);
+    await pendingUser.save();
 
-    return res.json({
-      message: "OTP sent to your email. Please verify to complete registration.",
-      otpd: otpExpiresAt
-    });
+    try {
+      await sendDataOnMail(normalizedEmail, otp);
+
+      return res.status(200).json({
+        message: "OTP sent to your email. Please verify to complete registration.",
+        otpExpiresAt,
+        otpSent: true
+      });
+
+    } catch (mailError) {
+      pendingUser.otpHash = null;
+      pendingUser.otpExpiresAt = null;
+
+      await pendingUser.save();
+
+      return res.status(503).json({
+        message: "Email could not be sent. Your registration details are saved. Please try resending OTP.",
+        otpSent: false
+      });
+    }
 
   } catch (err) {
     return res.status(500).json({
@@ -58,58 +95,228 @@ export const saveUser = async (req, res) => {
   }
 };
 
-
 //verifyUser
 
 export const verifyUser = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const index = fakeDB.findIndex(u => u.email === email);
-
-    if (index === -1) {
+    if (!email || !otp) {
       return res.status(400).json({
-        message: "User not found or OTP expired"
+        message: "Email and OTP are required"
       });
     }
 
-    const user = fakeDB[index];
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (user.otp !== otp) {
-      return res.status(400).json({
-        message: "Invalid OTP"
+    const pendingUser = await pendingUserModel.findOne({
+      email: normalizedEmail
+    });
+
+    if (!pendingUser) {
+      return res.status(404).json({
+        message: "Registration not found. Please register again."
       });
     }
 
-    if (user.otpExpiresAt < new Date()) {
-      fakeDB.splice(index, 1);
+    
+    if (pendingUser.pendingExpiresAt <= new Date()) {
+      await pendingUserModel.deleteOne({ _id: pendingUser._id });
 
       return res.status(400).json({
-        message: "OTP expired"
+        message: "Registration expired. Please register again."
       });
     }
 
+    
+    if (!pendingUser.otpHash || !pendingUser.otpExpiresAt) {
+      return res.status(400).json({
+        message: "OTP is not available. Please resend OTP."
+      });
+    }
+
+    
+    if (pendingUser.otpExpiresAt <= new Date()) {
+      return res.status(400).json({
+        message: "OTP expired. Please resend OTP."
+      });
+    }
+
+   
+    if (pendingUser.otpAttempts >= 5) {
+      await pendingUserModel.deleteOne({ _id: pendingUser._id });
+
+      return res.status(400).json({
+        message: "Maximum OTP attempts reached. Please register again."
+      });
+    }
+
+    
+    const isOtpValid = await bcrypt.compare(
+      otp.toString(),
+      pendingUser.otpHash
+    );
+
+    if (!isOtpValid) {
+      pendingUser.otpAttempts += 1;
+
+      const remainingAttempts = 5 - pendingUser.otpAttempts;
+
+      if (pendingUser.otpAttempts >= 5) {
+        await pendingUserModel.deleteOne({ _id: pendingUser._id });
+
+        return res.status(400).json({
+          message: "Maximum attempts reached. Please register again."
+        });
+      }
+
+      await pendingUser.save();
+
+      return res.status(400).json({
+        message: `Invalid OTP. ${remainingAttempts} attempts remaining.`
+      });
+    }
+
+  
+    const existingUser = await userSchemaModel.findOne({
+      email: normalizedEmail
+    });
+
+    if (existingUser) {
+      await pendingUserModel.deleteOne({ _id: pendingUser._id });
+
+      return res.status(400).json({
+        message: "Email already registered"
+      });
+    }
+
+    
     const newUser = new userSchemaModel({
-      name: user.name,
-      email: user.email,
-      password: user.password,
-      mobile: user.mobile,
-      gender: user.gender,
-      role: user.role,
+      name: pendingUser.name,
+      email: pendingUser.email,
+      password: pendingUser.password,
+      mobile: pendingUser.mobile,
+      gender: pendingUser.gender,
+      role: pendingUser.role,
       info: Date()
     });
 
     await newUser.save();
 
-    fakeDB.splice(index, 1);
+   
+    await pendingUserModel.deleteOne({
+      _id: pendingUser._id
+    });
 
-    return res.json({
+    return res.status(200).json({
       message: "OTP verified successfully. Registration complete!"
     });
 
   } catch (err) {
     return res.status(500).json({
       message: "OTP verification failed"
+    });
+  }
+};
+
+
+//resend
+export const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required"
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const pendingUser = await pendingUserModel.findOne({
+      email: normalizedEmail
+    });
+
+    if (!pendingUser) {
+      return res.status(404).json({
+        message: "Pending registration not found. Please register again."
+      });
+    }
+
+    const now = new Date();
+
+    if (pendingUser.pendingExpiresAt <= now) {
+      await pendingUserModel.deleteOne({ _id: pendingUser._id });
+
+      return res.status(400).json({
+        message: "Registration expired. Please register again."
+      });
+    }
+
+  
+    if (
+      pendingUser.lastOtpSentAt &&
+      now - pendingUser.lastOtpSentAt < 60 * 1000
+    ) {
+      const remainingSeconds = Math.ceil(
+        (60 * 1000 - (now - pendingUser.lastOtpSentAt)) / 1000
+      );
+
+      return res.status(429).json({
+        message: `Please wait ${remainingSeconds} seconds before resending OTP.`
+      });
+    }
+
+    if (
+      !pendingUser.resendWindowStart ||
+      now - pendingUser.resendWindowStart >= 15 * 60 * 1000
+    ) {
+      pendingUser.resendWindowStart = now;
+      pendingUser.resendCount = 0;
+    }
+
+   
+    if (pendingUser.resendCount >= 3) {
+      return res.status(429).json({
+        message: "Maximum 3 OTP resends allowed in 15 minutes."
+      });
+    }
+
+   
+    const otp = generateOTP();
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    pendingUser.otpHash = otpHash;
+    pendingUser.otpExpiresAt = new Date(now.getTime() + 5 * 60 * 1000);
+    pendingUser.otpAttempts = 0;
+    pendingUser.resendCount += 1;
+    pendingUser.lastOtpSentAt = now;
+
+    await pendingUser.save();
+
+    try {
+      await sendDataOnMail(normalizedEmail, otp);
+
+      return res.status(200).json({
+        message: "New OTP sent successfully.",
+        otpExpiresAt: pendingUser.otpExpiresAt
+      });
+
+    } catch (mailError) {
+      
+      pendingUser.otpHash = null;
+      pendingUser.otpExpiresAt = null;
+
+      await pendingUser.save();
+
+      return res.status(503).json({
+        message: "Email could not be sent. Please try again later."
+      });
+    }
+
+  } catch (err) {
+    return res.status(500).json({
+      message: "Unable to resend OTP."
     });
   }
 };

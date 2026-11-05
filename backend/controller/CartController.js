@@ -8,6 +8,7 @@ import APIResponse from "../response/APIResponse.js";
 export const addToCart = async (req, res) => {
   try {
     const { userId, name, serviceId, serviceName, price, status = "pending" } = req.body;
+   
 
     if (!userId || !name || !serviceId || !serviceName || !price) {
       return res.status(400).json(
