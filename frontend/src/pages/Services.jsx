@@ -90,12 +90,8 @@ function Services() {
 
       alert("Item Added in Cart");
     } catch (err) {
-      alert("Something Went Wrong!");
+      alert("Service already in cart");
 
-      console.error(
-        "Error:",
-        err.response?.data || err.message
-      );
     }
   };
 

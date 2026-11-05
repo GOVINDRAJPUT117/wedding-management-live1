@@ -20,4 +20,6 @@ export default {
   fetchcategory: `${BASE_URL}/service/category`,
   updateuser: `${BASE_URL}/user/editprofile`,
   withouttokenfetchcategory: `${BASE_URL}/service/cat`,
+  resendOtp: `${BASE_URL}/user/resendOtp`,
+cancelPendingUser: `${BASE_URL}/user/cancelPendingUser`,
 };

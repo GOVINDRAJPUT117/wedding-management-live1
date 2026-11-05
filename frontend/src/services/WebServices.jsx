@@ -19,7 +19,7 @@ class WebServices {
             headers: {
                 Authorization: 'Bearer ' + token
             },
-            withCredentials: true  // Optional, only if cookies are needed
+            withCredentials: true  
         });
         return result;
     }
@@ -30,7 +30,7 @@ class WebServices {
             headers: {
                 Authorization: 'Bearer ' + token
             },
-            withCredentials: true  // Optional, only if cookies are needed
+            withCredentials: true  
         });
         return result;
     }
@@ -41,7 +41,7 @@ class WebServices {
             headers: {
                 Authorization: 'Bearer ' + token
             },
-            withCredentials: true  // Optional, only if cookies are needed
+            withCredentials: true  
         });
         return result;
     }
@@ -52,18 +52,18 @@ class WebServices {
             headers: {
                 Authorization: 'Bearer ' + token
             },
-            withCredentials: true  // Optional, only if cookies are needed
+            withCredentials: true  // Optional, only cookies  needed
         });
         return result;
     }
 
-    // DELETE request with token (alternate naming)
+    // DELETE request with token 
     deleteAPIUsingTokenAlt(url, token) {
         var result = axios.delete(url, {
             headers: {
                 Authorization: 'Bearer ' + token
             },
-            withCredentials: true  // Optional, only if cookies are needed
+            withCredentials: true  
         });
         return result;
     }

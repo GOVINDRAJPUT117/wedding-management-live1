@@ -107,7 +107,38 @@ const Navbar = ({ userData, setUserData }) => {
                     Photography
                   </Link>
                 </li>
-
+               <li>
+                  <Link
+                    className="dropdown-item"
+                    to="/category/mehendi"
+                  >
+                    Mehendi
+                  </Link>
+                </li>
+                 <li>
+                  <Link
+                    className="dropdown-item"
+                    to="/category/flowers & decoration"
+                  >
+                    flowers & decoration
+                  </Link>
+                </li>
+                 <li>
+                  <Link
+                    className="dropdown-item"
+                    to="/category/dance & entertainment"
+                  >
+                    dance & entertainment
+                  </Link>
+                </li>
+                 <li>
+                  <Link
+                    className="dropdown-item"
+                    to="/category/venue"
+                  >
+                     Venue
+                   </Link>
+                </li>
                 <li>
                   <Link
                     className="dropdown-item"

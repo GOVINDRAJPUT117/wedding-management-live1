@@ -115,9 +115,7 @@ function Dashboard() {
 
                 <td>
                   <img
-                    src={`https://wedding-management-backend-9wms.onrender.com/uploads/${encodeURIComponent(
-                      service.service_image
-                    )}`}
+                    src={service.service_image || ""}
                     alt={service.service_name}
                     style={{
                       height: "75px",

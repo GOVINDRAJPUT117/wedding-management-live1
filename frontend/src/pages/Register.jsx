@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import WebService from "../services/WebServices";
 import WebAPI from "../services/WebAPI";
-import { useNavigate,Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
 
 function Register() {
@@ -19,62 +19,122 @@ function Register() {
   const [showOtp, setShowOtp] = useState(false);
   const [message, setMessage] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setStore({ ...store, [name]: value });
+    setStore((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Send OTP / Register
   const submitForm = async (e) => {
     e.preventDefault();
     setMessage("");
+    setLoading(true);
 
     try {
-      const res = await WebService.postAPICall(WebAPI.registerAPI, store);
+      const res = await WebService.postAPICall(
+        WebAPI.registerAPI,
+        store
+      );
+  console.log("ye frontens se send ho rha he ",store)
+      setMessage(
+        res.data.message ||
+        "OTP sent successfully. Please check your email."
+      );
 
-      setMessage(res.data.message || "OTP sent successfully");
       setShowOtp(true);
-      setTimeLeft(300);
+      setOtp("");
+      setTimeLeft(120);
     } catch (err) {
       setMessage(
-        err.response?.data?.message || "Registration failed. Please try again."
+        err.response?.data?.message ||
+        "Registration failed. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Verify OTP
   const verifyOtp = async () => {
+    if (!otp.trim()) {
+      setMessage("Please enter OTP.");
+      return;
+    }
+
     setMessage("");
+    setLoading(true);
 
     try {
-      const res = await WebService.postAPICall(WebAPI.verify, {
-        email: store.email,
-        otp,
-      });
+      const res = await WebService.postAPICall(
+        WebAPI.verify,
+        {
+          email: store.email,
+          otp,
+        }
+      );
 
-      setMessage(res.data.message || "Verified successfully");
+      setMessage(res.data.message || "Verified successfully.");
       setShowOtp(false);
       setTimeLeft(0);
+
       navigate("/login");
     } catch (err) {
       setMessage(
-        err.response?.data?.message || "OTP verification failed. Please try again."
+        err.response?.data?.message ||
+        "OTP verification failed. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (timeLeft <= 0) return;
+  // Resend OTP
+  const resendOtp = async () => {
+    setMessage("");
+    setLoading(true);
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+    try {
+      const res = await WebService.postAPICall(
+        WebAPI.resendOtp,
+        {
+          email: store.email,
+        }
+      );
+
+      setOtp("");
+      setTimeLeft(120);
+
+      setMessage(
+        res.data.message ||
+        "OTP sent successfully. Please check your email."
+      );
+    } catch (err) {
+      setMessage(
+        err.response?.data?.message ||
+        "Unable to resend OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // OTP countdown
+  useEffect(() => {
+    if (!showOtp || timeLeft <= 0) return;
+
+    const timer = setTimeout(() => {
+      setTimeLeft((prev) => Math.max(prev - 1, 0));
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+    return () => clearTimeout(timer);
+  }, [timeLeft, showOtp]);
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
+
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
@@ -159,8 +219,12 @@ function Register() {
               </select>
             </div>
 
-            <button type="submit" className="auth-button">
-              Create Account
+            <button
+              type="submit"
+              className="auth-button"
+              disabled={loading}
+            >
+              {loading ? "Sending OTP..." : "Create Account"}
             </button>
           </form>
         ) : (
@@ -171,25 +235,47 @@ function Register() {
                 type="text"
                 placeholder="Enter OTP"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                maxLength={6}
+                inputMode="numeric"
               />
             </div>
 
             <button
+              type="button"
               onClick={verifyOtp}
               className="auth-button"
-              disabled={timeLeft <= 0}
+              disabled={timeLeft <= 0 || loading || otp.length !== 6}
             >
-              Verify OTP
+              {loading ? "Please wait..." : "Verify OTP"}
             </button>
 
-            <p className="otp-timer">
-              OTP expires in: <strong>{formatTime(timeLeft)}</strong>
-            </p>
+            {timeLeft > 0 ? (
+              <p className="otp-timer">
+                OTP expires in: <strong>{formatTime(timeLeft)}</strong>
+              </p>
+            ) : (
+              <div className="resend-section">
+                <p>OTP expired. Please request a new OTP.</p>
+
+                <button
+                  type="button"
+                  onClick={resendOtp}
+                  className="auth-button"
+                  disabled={loading}
+                >
+                  {loading ? "Sending..." : "Resend OTP"}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {message && <p className="auth-message">{message}</p>}
+        {message && (
+          <p className="auth-message">{message}</p>
+        )}
 
         {!showOtp && (
           <p className="auth-footer-text">
@@ -203,4 +289,3 @@ function Register() {
 }
 
 export default Register;
-
