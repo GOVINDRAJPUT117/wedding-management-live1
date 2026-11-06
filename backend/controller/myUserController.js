@@ -10,6 +10,7 @@ import pendingUserModel from '../model/pendingUserModel.js';
 
 
 
+
 export const saveUser = async (req, res) => {
   try {
     const { name, email, password, mobile, gender } = req.body;
@@ -77,6 +78,8 @@ export const saveUser = async (req, res) => {
       });
 
     } catch (mailError) {
+      console.log("EMAIL ERROR:", mailError);
+
       pendingUser.otpHash = null;
       pendingUser.otpExpiresAt = null;
 
@@ -94,6 +97,7 @@ export const saveUser = async (req, res) => {
     });
   }
 };
+
 
 //verifyUser
 
