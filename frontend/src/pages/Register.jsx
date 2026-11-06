@@ -37,7 +37,7 @@ function Register() {
         WebAPI.registerAPI,
         store
       );
-  console.log("ye frontens se send ho rha he ",store)
+  
       setMessage(
         res.data.message ||
         "OTP sent successfully. Please check your email."
